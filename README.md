@@ -6,6 +6,8 @@ Ein Mac-Notizblock für Mathematik. Du tippst, es steht sofort gesetzt da.
 
 ![Symbolpalette mit ⌘K](docs/palette.png)
 
+![Dasselbe Blatt als PDF auf A4](docs/pdf.png)
+
 ## Die Idee
 
 Formeln schreibt man am schnellsten mit der Tastatur – aber Mathematik ist
@@ -26,7 +28,7 @@ Drei Ebenen, je nachdem wie genau du es wissen willst:
 
 ## Zeilenarten
 
-Ein Blatt ist eine Liste von Zeilen, `↩` macht die nächste. Vier Arten, umschaltbar
+Ein Blatt ist eine Liste von Zeilen, `↩` macht die nächste. Fünf Arten, umschaltbar
 mit `⌥⌘1` bis `⌥⌘5`:
 
 | Art | Wofür |
@@ -36,6 +38,9 @@ mit `⌥⌘1` bis `⌥⌘5`:
 | **Text** | Fließtext in Formelgröße — der Normalfall für Aufgabentexte |
 | **Notiz** | Kleinere Anmerkung am Rand des Gedankengangs |
 | **Überschrift** | Aufgabennummer, Abschnittstitel |
+
+Dazu kommt die **Tabelle** als eigene Zeile – sie wird mit `⇧⌘T` eingefügt statt
+umgestellt, siehe [Tabellen](#tabellen).
 
 Alle Größen hängen an einer Zahl: Text, Mischzeile und Formel sind gleich groß,
 die Überschrift 20 % größer, die Notiz knapp 30 % kleiner. `⌘+` und `⌘−`
@@ -297,6 +302,13 @@ Sources/MathPad/
   Palette/      Symbolkatalog und unscharfe Suche
   Export/       Zwischenablage, PDF (PDFRenderer: A4-Satz), .tex, .md
   Resources/    web/ (der Editor) und vendor/mathlive (MIT)
+
+Sources/MathPad/Resources/web/
+  editor.js     Zeilen, Fokus, Verlauf, Tabellen – die Brücke zu Swift
+  mixed.js      Regeln für „Text + Formel": wann ein Wort zur Formel wird
+  paste.js      Eingefügtes lesen (MathML, LaTeX, Markdown, gerenderter Text)
+  print.js      Das Blatt als Fließtext setzen, für den PDF-Export
+  editor.css    Gestaltung, Hell/Dunkel, Druckbild
 ```
 
 Die Bearbeitungsfläche ist eine lokale Webseite in einer `WKWebView`, die
