@@ -1,0 +1,358 @@
+:root {
+  --bg: #fdfdfb;
+  --fg: #16161a;
+  --muted: #9a9aa2;
+  --rule: #e8e8e3;
+  --accent: #3f6cff;
+  --accent-soft: rgba(63, 108, 255, 0.10);
+  --text-block: #45454d;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --size: 21px;
+  --gutter: 44px;
+  --table-rule: #cfcfc8;
+  --table-header: rgba(0, 0, 0, 0.035);
+}
+
+:root[data-theme="dark"] {
+  --bg: #17171a;
+  --fg: #ececf1;
+  --muted: #6f6f7a;
+  --rule: #2a2a30;
+  --accent: #7d9bff;
+  --accent-soft: rgba(125, 155, 255, 0.14);
+  --text-block: #b6b6c2;
+  --table-rule: #3c3c44;
+  --table-header: rgba(255, 255, 255, 0.05);
+}
+
+* { box-sizing: border-box; }
+
+/* The colour tokens live on :root, so <html> itself paints the right ground.
+   With `height: 100%` the body box stopped after one screen and the canvas
+   showed through as soon as the sheet was scrolled — white paper under white
+   text in dark mode. `min-height` lets the ground grow with the content. */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+
+/* Wide enough for an imported worksheet sentence, but never edge to edge. */
+#sheet {
+  padding: 28px 0 8px;
+  max-width: min(1180px, 100% - 40px);
+  margin: 0 auto;
+}
+
+#tail {
+  max-width: min(1180px, 100% - 40px);
+  margin: 0 auto;
+  min-height: 45vh;
+  cursor: text;
+}
+
+/* ---------- block ---------- */
+
+.block {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 3px 24px 3px 8px;
+  border-radius: 8px;
+  position: relative;
+  scroll-margin: 80px;
+}
+
+.block.focused { background: var(--accent-soft); }
+
+.block .gutter {
+  flex: 0 0 var(--gutter);
+  text-align: right;
+  padding: 9px 8px 0 0;
+  font: 11px/1 var(--mono);
+  color: var(--muted);
+  user-select: none;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+
+.block:hover .gutter,
+.block.focused .gutter { opacity: 1; }
+
+.block .content { flex: 1 1 auto; min-width: 0; }
+
+/* ---------- math ---------- */
+
+math-field {
+  display: block;
+  width: 100%;
+  font-size: var(--size);
+  padding: 4px 2px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  --smart-fence-color: var(--muted);
+  --caret-color: var(--accent);
+  --selection-background-color: var(--accent-soft);
+  --placeholder-color: var(--muted);
+  --contains-highlight-background-color: var(--accent-soft);
+}
+
+math-field::part(virtual-keyboard-toggle),
+math-field::part(menu-toggle) { display: none; }
+
+/* MathLive clips what does not fit and only scrolls it while the caret travels
+   through. A long worksheet sentence was therefore cut off at the right edge with
+   no way to see the rest; making the content part scrollable keeps all of it
+   reachable. */
+math-field::part(content) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+/* MathLive lays its formulas out with fixed positions and cannot reflow, so a
+   long line scrolls instead of wrapping. Without a hint that would just look
+   like text stopping mid-sentence; the fade says "there is more to the right".
+   While the line is being edited it is left alone — the caret scrolls it. */
+.block.overflows:not(.focused)::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  right: 0;
+  width: 46px;
+  background: linear-gradient(to right, transparent, var(--bg) 80%);
+  pointer-events: none;
+  border-radius: 0 8px 8px 0;
+}
+
+.block.is-empty .content::after {
+  content: attr(data-hint);
+  position: absolute;
+  left: calc(var(--gutter) + 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* ---------- LaTeX source view ---------- */
+
+textarea.src {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  font: 14px/1.5 var(--mono);
+  padding: 8px 10px;
+  outline: none;
+  overflow: hidden;
+}
+
+/* ---------- text & heading ---------- */
+
+/* Every prose size is derived from --size, so ⌘+ and ⌘− move the whole sheet
+   together instead of leaving the notes behind. */
+.prose {
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 5px 2px;
+  color: var(--text-block);
+  font-size: calc(var(--size) * 0.72);
+}
+
+/* Body text sits at formula size so a paragraph and the prose inside a mixed
+   line are the same height — a note stays smaller on purpose, as an aside. */
+.prose.paragraph {
+  font-size: var(--size);
+  color: var(--fg);
+  padding: 7px 2px;
+  line-height: 1.45;
+}
+
+.prose.heading {
+  color: var(--fg);
+  font-size: calc(var(--size) * 1.2);
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  padding-top: 14px;
+}
+
+/* separator above a heading, except the first block */
+.block.kind-heading + .block .gutter { padding-top: 20px; }
+
+/* ---------- table ---------- */
+
+/* Cells are sized by what is in them (the browser's automatic table layout),
+   so a column of short numbers stays narrow next to a column of formulas. A
+   dragged width is a lower bound on top of that, never a clip. */
+.table-wrap {
+  position: relative;
+  padding: 6px 0 22px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.table-scroll {
+  position: relative;
+  overflow-x: auto;
+  padding-right: 26px;
+  scrollbar-width: thin;
+}
+
+.mp-table {
+  border-collapse: collapse;
+  font-size: var(--size);
+  color: var(--fg);
+}
+
+.mp-table td {
+  position: relative;
+  min-width: 2.6em;
+  padding: 0 0.3em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mp-table math-field {
+  display: block;
+  width: 100%;
+  min-width: 1.6em;
+  padding: 3px 0;
+}
+
+.mp-table td.align-center math-field::part(content) { justify-content: center; }
+.mp-table td.align-right math-field::part(content) { justify-content: flex-end; }
+
+/* Gitter: every cell boxed. */
+.mp-table.lines-grid td { border: 1px solid var(--table-rule); }
+
+/* Nur waagerecht: the book-style table — rules between rows, heavier at the
+   top and bottom, no verticals. */
+.mp-table.lines-lines tr td { border-bottom: 1px solid var(--table-rule); }
+.mp-table.lines-lines tr:first-child td { border-top: 1.6px solid var(--fg); }
+.mp-table.lines-lines tr:last-child td { border-bottom: 1.6px solid var(--fg); }
+
+/* Ohne Linien: only the header keeps a rule, so it still reads as a header. */
+.mp-table.lines-none.has-header tr:first-child td { border-bottom: 1.4px solid var(--fg); }
+
+.mp-table.has-header tr:first-child td { background: var(--table-header); }
+.mp-table.has-header tr:first-child math-field { font-weight: 600; }
+.mp-table.lines-grid.has-header tr:first-child td { border-bottom: 1.6px solid var(--fg); }
+
+.block.focused .mp-table td.active { box-shadow: inset 0 0 0 1.5px var(--accent); }
+
+/* Drag the right edge of any cell to widen its column. */
+.col-grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -4px;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 2;
+}
+.col-grip:hover,
+.mp-table.resizing .col-grip:hover { background: var(--accent); opacity: .35; }
+.mp-table.resizing { cursor: col-resize; user-select: none; }
+
+/* The + buttons only appear while the pointer is on the table or the caret is
+   in it, so a finished table looks like a table and not like a form. */
+.table-add {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed color-mix(in srgb, var(--muted) 55%, transparent);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 14px/1 -apple-system, system-ui, sans-serif;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease;
+  padding: 0;
+}
+.table-add:hover { color: var(--accent); border-color: var(--accent); }
+.table-add.add-column { top: 0; bottom: 0; right: 2px; width: 20px; }
+.table-add.add-row { left: 0; right: 26px; bottom: 0; height: 18px; }
+.block:hover .table-add,
+.block.focused .table-add { opacity: 1; }
+
+/* ---------- export ---------- */
+
+/* Paper is white whatever the screen looks like. The whole palette is swapped,
+   not just body's own two colours: formulas and prose read their colour from
+   these tokens, so setting only `body { color }` used to leave white text on a
+   white page in dark mode — invisible on screen and in the exported PDF. */
+:root.exporting {
+  --bg: #ffffff;
+  --fg: #000000;
+  --text-block: #1a1a1a;
+  --muted: #8a8a8a;
+  --rule: #dddddd;
+  --accent: #3f6cff;
+  --accent-soft: transparent;
+  --table-rule: #9a9a9a;
+  --table-header: rgba(0, 0, 0, 0.04);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+:root.exporting .table-add,
+:root.exporting .col-grip,
+:root.exporting .gutter,
+:root.exporting .block.is-empty { display: none; }
+:root.exporting .block.focused { background: none; }
+:root.exporting #sheet { padding: 12px 0; }
+:root.exporting .mp-table td.active { box-shadow: none; }
+:root.exporting .table-wrap { padding-bottom: 6px; }
+
+/* ---------- paper (PDF export) ---------- */
+
+/* The sheet set as flowing text for export: see print.js. Only ever shown in
+   the export's own web view. */
+#print { display: none; }
+:root.printing #print { display: block; margin: 0; padding: 0; }
+:root.printing, :root.printing body { background: #ffffff; }
+
+#print .print-line {
+  font-size: var(--size);
+  color: var(--fg);
+  padding: 0.28em 0;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+/* A formula never breaks inside, the text around it does. */
+#print .print-math {
+  display: inline-block;
+  white-space: nowrap;
+  /* The formula's own baseline on the text's: "Sei g∘f" reads as one line. */
+  vertical-align: baseline;
+  max-width: none;
+}
+#print .print-display { padding: 0.45em 0; }
+#print .print-raw { font: 0.8em var(--mono); }
+
+#print .prose { padding: 0.2em 0; }
+#print .prose.text { font-size: calc(var(--size) * 0.72); color: var(--text-block); }
+#print .prose.heading { font-size: calc(var(--size) * 1.2); padding-top: 0.6em; }
+
+#print .print-table-wrap > table { width: max-content; }
+#print .print-table td { padding: 0.15em 0.45em; white-space: nowrap; }
+#print .print-table td.align-center { text-align: center; }
+#print .print-table td.align-right { text-align: right; }
+#print .print-table.has-header tr:first-child td { font-weight: 600; }

@@ -1,0 +1,13 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Fertige App
+*.app
+
+# macOS
+.DS_Store
+
+# Lokale Werkzeug-Einstellungen (enthalten Pfade dieses Rechners)
+.claude/
